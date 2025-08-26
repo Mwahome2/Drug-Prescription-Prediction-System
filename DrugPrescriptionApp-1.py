@@ -14,34 +14,37 @@ import pandas as pd
 
 # Loading the trained model
 loaded_model = pickle.load(open("C:/Users/STUDENT/Desktop/DRUG PRESCRIPTION USING ML/RandomForest_model.pkl",'rb'))
-def diagnosis(input_data_features): # Renamed argument for clarity
-    # input_data_features should be a tuple or list of features (e.g., age, gender, symptom1, lab_result)
-    # The example line below is for demonstration of expected input structure,
-    # but in a real function call, 'input_data_features' would be passed as an argument.
-    # For instance, if you're calling diagnosis((40, 0, 0, 0, 0.8)), then input_data_features would be that tuple.
+from sklearn.preprocessing import LabelEncoder
+import numpy as np
+import streamlit as st
 
-    # Changing the input data to a numpy array
-    input_data_as_numpy_array = np.asarray(input_data_features)
+# The rest of your code follows
 
-    # Reshape the array as we are predicting for a single instance
-    input_data_reshaped = input_data_as_numpy_array.reshape(1, -1)
+# Assuming you have a pre-trained label encoder for gender
+gender_encoder = LabelEncoder()
+gender_encoder.fit(['F', 'M']) # Fit the encoder with all possible values
 
-    # Make the prediction
-    # 'loaded_model' and 'le' (label encoder) must be accessible in this scope.
-    # Typically, they are loaded globally in a Streamlit app or passed as arguments.
-    prediction = loaded_model.predict(input_data_reshaped)
+def diagnosis(input_data):
+    # 1. Access the categorical value (e.g., gender)
+    gender = input_data['gender']
 
-    # Print the predicted drug (the output is the encoded drug)
-    print('Predicted drug (encoded): {}'.format(prediction[0]))
-
-    # To get the actual drug name, you would need the inverse mapping from the label encoder
-    # used for the 'Drug' column during your model training.
-    # Ensure 'le' is your loaded LabelEncoder instance.
-    predicted_drug_name = le.inverse_transform(prediction)[0]
-    print('Predicted drug: {}'.format(predicted_drug_name))
-
-    return predicted_drug_name # Return the actual drug name for use in your app
-
+    # 2. Encode the categorical value to a number
+    encoded_gender = gender_encoder.transform([gender])
+    
+    # 3. Create the final numpy array for prediction
+    # Ensure all other features are also numbers
+    processed_input = np.array([[
+        input_data['age'],
+        input_data['blood_pressure'],
+        encoded_gender[0], # Use the encoded value
+        # Add other numerical features
+    ]])
+    
+    # 4. Make the prediction with the cleaned data
+    # Assuming 'loaded_model' is defined elsewhere
+    prediction = loaded_model.predict(processed_input)
+    
+    return prediction
 def main():
     #giving a title
     st.title("Drug Prescription App")
