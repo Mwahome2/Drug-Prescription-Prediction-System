@@ -5,21 +5,20 @@ Created on Wed Aug 27 20:41:47 2025
 @author: STUDENT
 """
 
-
+# Import all necessary libraries at the top
 import streamlit as st
-import pickle
+import joblib
 import pandas as pd
-import os
-import joblib # Import joblib
-import numpy as np # Import numpy
+import numpy as np
 
-# --- 1. Load Machine Learning Model and Feature Names ---
-# --- 1. Load Machine Learning Model and Feature Names ---
+# --- 1. Load Machine Learning Model and Encoders ---
+# This section now references files directly, avoiding the 'script_dir' error.
 loaded_model = None
 label_encoders = {}  # Dictionary to hold all label encoders
 
 try:
-    # Use direct file names, assuming they are in the same folder as the script
+    # Use direct file names assuming they are in the same folder as the script
+    # This is the key change to fix the NameError.
     model_path = 'drug_prediction_model.joblib'
     sex_encoder_path = 'sex_encoder.joblib'
     bp_encoder_path = 'bp_encoder.joblib'
@@ -34,111 +33,116 @@ try:
     label_encoders['BP'] = joblib.load(open(bp_encoder_path, 'rb'))
     label_encoders['Cholesterol'] = joblib.load(open(cholesterol_encoder_path, 'rb'))
     label_encoders['Drug'] = joblib.load(open(drug_encoder_path, 'rb'))
-    
-    # Define a predict function after loading the model and encoders
-    def predict_drug(input_data):
-        # Your prediction logic here
-        pass
 
 except Exception as e:
-    st.error(f"Error loading model or encoders: {e} 😞")
+    # A clear error message is displayed to the user if anything fails to load
+    st.error(f"Error loading model or encoders: {e} 😞. Please check that all files are in the same directory.")
     loaded_model = None
-    
-# ... rest of your code
-# --- Prediction Function ---
-def predict_drug(input_data_features):
-    input_data_as_numpy_array = np.asarray(input_data_features)
-    input_data_reshaped = input_data_as_numpy_array.reshape(1, -1)
 
+
+# --- 2. Create the Prediction Function ---
+def predict_drug(age, sex, bp, cholesterol, na_to_k):
+    """
+    Predicts the drug based on input features using the loaded model and encoders.
+    """
     if loaded_model is None:
-        return "Model not available"
+        # Prevents the app from crashing if the model isn't loaded
+        return "Model not loaded. Please contact the administrator."
 
     try:
-        numerical_prediction = loaded_model.predict(input_data_reshaped)
-        # Decode the prediction using the 'Drug' encoder
-        predicted_drug_name = label_encoders['Drug'].inverse_transform(numerical_prediction)[0]
-
-        return predicted_drug_name
-    except Exception as e:
-        st.error(f"An error occurred during prediction: {e} 😞")
-        return "Prediction error"
-
-# --- Main Streamlit App Function ---
-def main():
-    st.set_page_config(page_title="Drug Prescription Prediction", layout="centered")
-
-    st.title("💊 AI-Assisted Drug Prescription Prediction Web App")
-    st.markdown("---")
-    st.write("Enter patient details to get a drug prescription recommendation.")
-
-    st.header("Patient Information")
-
-    age = st.slider("Age", min_value=15, max_value=74, value=30, step=1)
-
-    # Use the loaded encoders to map options to numerical values
-    # Ensure the classes_ attribute is available from the loaded encoders
-    if 'Sex' in label_encoders and hasattr(label_encoders['Sex'], 'classes_'):
-        sex_options = list(label_encoders['Sex'].classes_)
-        sex = st.selectbox("Sex", sex_options)
+        # Encode categorical inputs using the loaded encoders
         sex_encoded = label_encoders['Sex'].transform([sex])[0]
-    else:
-        st.warning("Sex encoder not loaded correctly. Cannot display sex options.")
-        sex_encoded = None # Or handle appropriately
-
-    if 'BP' in label_encoders and hasattr(label_encoders['BP'], 'classes_'):
-        bp_options = list(label_encoders['BP'].classes_)
-        bp = st.selectbox("Blood Pressure", bp_options)
         bp_encoded = label_encoders['BP'].transform([bp])[0]
-    else:
-         st.warning("BP encoder not loaded correctly. Cannot display BP options.")
-         bp_encoded = None # Or handle appropriately
-
-    if 'Cholesterol' in label_encoders and hasattr(label_encoders['Cholesterol'], 'classes_'):
-        cholesterol_options = list(label_encoders['Cholesterol'].classes_)
-        cholesterol = st.selectbox("Cholesterol level", cholesterol_options)
         cholesterol_encoded = label_encoders['Cholesterol'].transform([cholesterol])[0]
+
+        # Create a DataFrame for prediction
+        input_df = pd.DataFrame(
+            [[age, sex_encoded, bp_encoded, cholesterol_encoded, na_to_k]],
+            columns=['Age', 'Sex', 'BP', 'Cholesterol', 'Na_to_K']
+        )
+        
+        # Make the prediction
+        prediction_encoded = loaded_model.predict(input_df)[0]
+        
+        # Decode the prediction back to the original drug name
+        predicted_drug = label_encoders['Drug'].inverse_transform([prediction_encoded])[0]
+
+        return predicted_drug
+    except Exception as e:
+        # Catches any errors during the prediction process
+        st.error(f"Error during prediction: {e}")
+        return "Prediction failed."
+
+
+# --- 3. Streamlit App Interface ---
+# The app's layout and styling are defined here.
+
+# Add custom CSS for improved aesthetics.
+st.markdown(
+    """
+    <style>
+    .reportview-container {
+        background: linear-gradient(to right, #00c6ff, #0072ff);
+    }
+    .main .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+    .stApp {
+        background-color: #f0f2f6;
+    }
+    .st-bw {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+        transition: 0.3s;
+    }
+    .st-bw:hover {
+        box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+    }
+    .st-bv {
+        padding: 20px;
+        border-radius: 10px;
+        background-color: #ffffff;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+st.title("💊 AI-Assisted Drug Prescription Prediction Web App")
+st.markdown("A Machine Learning powered system to predict the most suitable drug.")
+
+# Create the input form for patient information
+st.header("Patient Information")
+with st.container():
+    st.markdown('<div class="st-bv">', unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
+    with col1:
+        age = st.number_input("Age", min_value=1, max_value=120, value=35)
+        # Use an index to handle initial state for selectbox
+        sex_options = ['F', 'M']
+        sex = st.selectbox("Sex", options=sex_options)
+
+        bp_options = ['HIGH', 'NORMAL', 'LOW']
+        bp = st.selectbox("Blood Pressure", options=bp_options)
+
+    with col2:
+        cholesterol_options = ['HIGH', 'NORMAL']
+        cholesterol = st.selectbox("Cholesterol", options=cholesterol_options)
+        na_to_k = st.number_input("Na_to_K Ratio", min_value=0.0, value=10.0)
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+
+# The prediction button
+if st.button("Predict Drug"):
+    if loaded_model:
+        result = predict_drug(age, sex, bp, cholesterol, na_to_k)
+        if result:
+            st.success(f"The recommended drug is: **{result}**")
     else:
-        st.warning("Cholesterol encoder not loaded correctly. Cannot display Cholesterol options.")
-        cholesterol_encoded = None # Or handle appropriately
+        st.warning("Please check the console for errors. The model could not be loaded.")
 
-
-    na_to_k = st.number_input("Sodium to Potassium", min_value=0.0, max_value=50.0, value=15.0, step=0.1)
-
-    # --- Initialize prediction result variable ---
-    predicted_drug_result = ''
-
-    st.markdown("---")
-
-    # Order of input data MUST match the order of features used during model training
-    # Assuming the order is 'Age', 'Sex', 'BP', 'Cholesterol', 'Na_to_K' based on your notebook.
-    input_data_for_prediction = [
-        age,
-        sex_encoded,
-        bp_encoded,
-        cholesterol_encoded,
-        na_to_k
-    ]
-
-    # Only attempt prediction if all encoders loaded correctly and encoded values are not None
-    if st.button("Get Drug Recommendation 🩺"):
-        if all(v is not None for v in [age, sex_encoded, bp_encoded, cholesterol_encoded, na_to_k]):
-            try:
-                predicted_drug_result = predict_drug(input_data_for_prediction)
-
-            except Exception as e:
-                st.error(f"An error occurred: {e} 😞")
-                predicted_drug_result = "Prediction error"
-        else:
-            st.warning("Please ensure all input fields are valid.")
-
-
-    if predicted_drug_result and predicted_drug_result not in ["Model not available", "Prediction error"]:
-        st.success(f"**Recommended Drug:** <span style='font-size: 2em; font-weight: bold;'>{predicted_drug_result}</span> 🌟")
-    elif predicted_drug_result:
-        st.error(predicted_drug_result)
-
-    st.markdown("---")
-    st.caption("Disclaimer: This prediction is an AI-assisted recommendation and should be thoroughly reviewed by a qualified physician.")
-
-if __name__ == '__main__':
-    main()
+# Add a footer
+st.markdown("---")
+st.markdown("Created by [Your Name] for a Capstone Project")
