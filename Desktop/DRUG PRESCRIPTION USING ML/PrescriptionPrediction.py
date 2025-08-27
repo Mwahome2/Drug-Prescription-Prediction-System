@@ -17,11 +17,13 @@ loaded_model = None
 label_encoders = {}  # Dictionary to hold all label encoders
 try:
     # Use direct file names assuming they are in the same folder as the script
-    model_path = 'drug_prediction_model.joblib'
-    sex_encoder_path = 'sex_encoder.joblib'
-    bp_encoder_path = 'bp_encoder.joblib'
-    cholesterol_encoder_path = 'cholesterol_encoder.joblib'
-    drug_encoder_path = 'drug_label_encoder.joblib'
+    model_path = 'drug_prediction_model.pkl'
+    # Loading in Streamlit app
+    sex_encoder = joblib.load("sex_encoder.pkl")
+    bp_encoder = joblib.load("bp_encoder.pkl")
+    cholesterol_encoder = joblib.load("cholesterol_encoder.pkl")
+    drug_encoder_path = joblib.load("drug_label_encoder.pkl")
+    
 
     # Load the machine learning model
     loaded_model = joblib.load(open(model_path, 'rb'))
