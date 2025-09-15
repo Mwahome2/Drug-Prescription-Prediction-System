@@ -50,7 +50,7 @@ def predict_drug(input_data_features):
     try:
         numerical_prediction = loaded_model.predict(input_data_reshaped)
         # Decode the prediction using the 'Drug' encoder
-        predicted_drug_name = label_encoders['Drug'].inverse_transform(numerical_prediction)[0]
+        predicted_drug_name = label_encoders['Druglabel'].inverse_transform(numerical_prediction)[0]
 
         return predicted_drug_name
     except Exception as e:
@@ -136,6 +136,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
 
 
