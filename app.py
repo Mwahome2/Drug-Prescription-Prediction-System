@@ -4,7 +4,7 @@ Created on Tue Aug 26 22:42:18 2025
 
 @author: STUDENT
 """
-!pip install joblib
+
 import streamlit as st
 import joblib #importing joblib
 import pickle
@@ -139,6 +139,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
 
 
