@@ -28,10 +28,10 @@ try:
 
     # Load all individual encoders
     label_encoders['Sex'] = joblib.load('sex_encoder.pkl')
-    label_encoders['BP'] = joblib.load('bp_encoder')
-    label_encoders['Cholesterol'] = joblib.load('cholesterol_encoder')
-    label_encoders['Druglabel'] = joblib.load('drug_label_encoder') # Load the Drug encoder
-    label_encoders['Drugprediction'] = joblib.load('drug_prediction_encoder')
+    label_encoders['BP'] = joblib.load('bp_encoder.pkl')
+    label_encoders['Cholesterol'] = joblib.load('cholesterol_encoder.pkl')
+    label_encoders['Druglabel'] = joblib.load('drug_label_encoder.pkl') # Load the Drug encoder
+    label_encoders['Drugprediction'] = joblib.load('drug_prediction_encoder.pkl')
                                                    
     st.success("Machine learning model and label encoders loaded successfully. ✅")
 except FileNotFoundError:
@@ -136,6 +136,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
 
 
