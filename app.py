@@ -21,21 +21,18 @@ script_dir = os.path.dirname(__file__)
 
 try:
     # Construct the correct file paths using the script's directory
-    model_path = os.path.join(script_dir, 'drug_prediction_model.joblib')
-    sex_encoder_path = os.path.join(script_dir, 'sex_encoder.joblib')
-    bp_encoder_path = os.path.join(script_dir, 'bp_encoder.joblib')
-    cholesterol_encoder_path = os.path.join(script_dir, 'cholesterol_encoder.joblib')
-    drug_encoder_path = os.path.join(script_dir, 'drug_label_encoder.joblib')
-
-    # Load the machine learning model
-    loaded_model = joblib.load(open(model_path, 'rb'))
+    model_path ='RandomForest_model.pkl'
+    loaded_model = joblib.load(model_path)
+    st.write(f"Loaded model from: {model_path}")
+   
 
     # Load all individual encoders
-    label_encoders['Sex'] = joblib.load(open(sex_encoder_path, 'rb'))
-    label_encoders['BP'] = joblib.load(open(bp_encoder_path, 'rb'))
-    label_encoders['Cholesterol'] = joblib.load(open(cholesterol_encoder_path, 'rb'))
-    label_encoders['Drug'] = joblib.load(open(drug_encoder_path, 'rb')) # Load the Drug encoder
-
+    label_encoders['Sex'] = joblib.load('sex_encoder.pkl')
+    label_encoders['BP'] = joblib.load('bp_encoder')
+    label_encoders['Cholesterol'] = joblib.load('cholesterol_encoder')
+    label_encoders['Druglabel'] = joblib.load('drug_label_encoder') # Load the Drug encoder
+    label_encoders['Drugprediction'] = joblib.load('drug_prediction_encoder,)
+                                                   
     st.success("Machine learning model and label encoders loaded successfully. ✅")
 except FileNotFoundError:
     st.error("Error: Ensure model and encoder files are present in the correct directory. ❌")
@@ -139,6 +136,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
 
 
