@@ -16,8 +16,7 @@ import numpy as np # Import numpy
 loaded_model = None
 label_encoders = {}  # Dictionary to hold all label encoders
 
-# Get the directory where the current script is located
-script_dir = os.path.dirname(__file__)
+
 
 try:
     # Construct the correct file paths using the script's directory
@@ -31,7 +30,7 @@ try:
     label_encoders['BP'] = joblib.load('bp_encoder.pkl')
     label_encoders['Cholesterol'] = joblib.load('cholesterol_encoder.pkl')
     label_encoders['Druglabel'] = joblib.load('drug_label_encoder.pkl') # Load the Drug encoder
-    label_encoders['Drugprediction'] = joblib.load('drug_prediction-encoder.pkl')
+   
                                                    
     st.success("Machine learning model and label encoders loaded successfully. ✅")
 except FileNotFoundError:
@@ -136,6 +135,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
 
 
